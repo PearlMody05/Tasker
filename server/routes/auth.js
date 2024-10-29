@@ -166,8 +166,8 @@ router.post('/verifyOtp/:id',async (req,res)=>{
       //if otp code is not equal to entered otp then del the user and flag it as invalid otp
       const result = await User.deleteOne({_id:user.id});
       console.log("Since user is not verfied we have Deleted it!, ",result);
-      return res.status(404).json({success:false});
-    }}
+      return res.status(404).json({success:false});}
+    }
     catch(err){
         return res.status(500).send("Something went wrong!");
     }
@@ -226,34 +226,55 @@ router.post('/login', [
   });
   
 
-//   //forgot password if user forgets password he will be sent a otp and will have to send and verify otp 
-//   router.put('/forgotPass',async(req,res)=>{
-//     try{const email = req.body.email;
-//     const user = await User.findOne({email:email});
-//     if(!user){
-//       return res.status(404).json({message :"The user does not exist try signing up"});
-//     }
-//     //now user exist but he has forgotten password so i will send email with otp 
-//       // Generate the OTP code
-//       const otp = await generateOTP();
-//       if (!otp) {
-//           throw new Error("Failed to generate OTP");
-//       }     
-//     details ={
-//       from : "nodemailing05@gmail.com",
-//       to: email,
-//       subject : "Your Otp is here",
-//       html : `<p>Your Otp is <b>${otp}</b> . Do not shate it with anyone<p> `
-//     };
-//     let success = false;
-//     let result = await sendOtp(user,details,otp);
-//     if(result.success) return res.status(200).json({success:result,message:result.message});
-//     else return res.status(404).json({success:false,message:result.message});
-// }
-// catch(error){
-//   console.error(error.message);
-//   return res.status(500).json({ success: false, message: "Internal server error" });   
-// }
-//   })
+  //forgot password if user forgets password he will be sent a otp and will have to send and verify otp 
+  router.put('/forgotPass',async(req,res)=>{
+    try{const email = req.body.email;
+    const user = await User.findOne({email:email});
+    if(!user){
+      return res.status(404).json({message :"The user does not exist try signing up"});
+    }
+    //now user exist but he has forgotten password so i will send email with otp 
+      // Generate the OTP code
+      const otp = await generateOTP();
+      if (!otp) {
+          throw new Error("Failed to generate OTP");
+      }     
+    details ={
+      from : "nodemailing05@gmail.com",
+      to: email,
+      subject : "Password Recovery - One-Time Password",
+      html : `Your One-Time Password (OTP) is: <b>${otp}</b> . Do not shate it with anyone<p> `
+    };
+    await sendOtp(details,user,otp,res);
+}
+catch(error){
+  console.error(error.message);
+  return res.status(500).json({ success: false, message: "Internal server error" });   
+}
+  })
+
+//change password verifyies otp and changes password
+router.put('/changePass', async(req,res)=>{
+  const enteredOtp = req.body.code; //entered otp
+  const newPass = req.body.password; //taking newly entered password fron user and thenreplacing the old one with one required
+  const email = req.body.email;
+  const user = await User.findOne({email});
+  if(!user){
+    //you are not saved to db means you are intruder
+    return res.status(400).json({ success: false, message: "Some problem occured" });
+  }
+  const OtpRec = await (Otp.findOne({userId:user.id}));
+  if(!OtpRec) return res.status(404).json({ success: false, message: "Some problem occured" });
+  if(OtpRec.code===enteredOtp){
+    let secPass = await bcrypt.hash(newPass,10);
+  user.password = secPass;
+  await user.save();
+  return res.status(200).json({success:true,message:"Password changed Successfully!"});
+  }else{
+    //passwords
+    res.status(400).json({success:false,message:"Some Problem Occured"});
+  }
+
+})
 
 module.exports = router;
