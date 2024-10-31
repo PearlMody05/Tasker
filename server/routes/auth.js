@@ -3,20 +3,21 @@ const {body,validationResult} = require('express-validator')
 const router = express.Router();
 const User = require('../models/User');
 const Otp = require('../models/Otp');
+const Team = require('../models/Team')
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 const mailtransport = nodemailer.createTransport({
     service:"gmail",
     auth:{
 user :"nodemailing05@gmail.com",
-pass:"vric lnkx vfrl wdzr",
+pass:process.env.Pass,
     },
 })
-
+const generateTeamCode = require('../generateTeam');
 
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
 
 
 
@@ -43,6 +44,14 @@ async (req,res)=>{
         password:secPass,
         isVerified:false,
     })
+    //now we will also give user a team
+    const defaultTeam = await Team.create({
+      name : `${req.body.name}'s Workspace`,
+      description : 'Personal Team',
+      teamCode :await generateTeamCode(),
+      userId : user._id
+    })
+
     return res.status(200).send("saved to db");
     //data saved 
     
