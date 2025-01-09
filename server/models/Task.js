@@ -1,4 +1,4 @@
-const {mongoose,Schema,rqString}=require('./setup')
+const {mongoose,Schema,rqString,rqDate}=require('./setup')
 const TaskSchema = new Schema({
     title:rqString,
     description :rqString,
@@ -11,13 +11,18 @@ const TaskSchema = new Schema({
         enum:['to-do','completed','in-progress'],
         default : 'to-do'
     },
-    assigneeId :{
+    assigneesId :{
         type:Schema.Types.ObjectId,
         ref:'User',
     },
-    reportedId:{
+    reportedId:[{
         type:Schema.Types.ObjectId,
         ref:'User',
+    }],
+    teamId: {  // New field to associate the task with a specific team
+        type: Schema.Types.ObjectId,
+        ref: 'Team',
+        required: true
     },
     createdAt:{
         ...rqDate,

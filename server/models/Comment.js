@@ -1,4 +1,4 @@
-const {mongoose,Schema,rqDate}=require('./setup')
+const {mongoose,Schema,rqDate, rqString}=require('./setup')
 const ComSchema = new Schema({
     userId:{
         type : Schema.Types.ObjectId,
@@ -10,7 +10,10 @@ const ComSchema = new Schema({
         ref:'task',
         required : true
     },
-    createdAt:rqDate
+    createdAt:{
+        ...rqDate,
+        default:Date.now},
+    texts : rqString
 })
 const Comment= mongoose.model('Comment',ComSchema);
 module.exports =Comment;

@@ -4,10 +4,19 @@ const Team = require('../models/Team')
 const generateTeamCode = require('../generateTeam')
 const {body,validationResult} = require('express-validator');
 const User = require('../models/User');
+const nodemailer = require('nodemailer');
+require ('dotenv').config();
+const mailtransport = nodemailer.createTransport({
+    service :"gmail",
+    auth:{
+        user:"nodemailing05@gmail.com",
+        pass:process.env.Pass
+    },
+});
 
 
 //creation of a team 
-//as soon as user logs in team should be created self team(that happens in signUp), i can be part of many teams 
+//as soon as user logs in team should be created self team(that happeened in signUp), i can be part of many teams 
 router.post('/createTeam',[
     body("name","Enter a valid name").isLength({min:2})
 ],async(req,res)=>{
@@ -25,8 +34,22 @@ router.post('/createTeam',[
         name : teamName,
         description: desc,
         teamCode : code,
-        userId : owner
-    })
+        userId : owner,
+        members:owner
+    });
+    const email = user.email;
+    details = {
+        from: "nodemailing05@gmail.com",
+        to: email,
+        subject: "Your team is sucessfully created!",
+        html: `<p><h3>Hi ${user.name},</h3></p>
+          <p>Thanks for using <strong>Tasker!</strong> We're excited to help you streamline your tasks and projects.</p>
+          <p>Your team code is  is <b>${code}</b>. Share this code to people to add them to your team.</p>
+          <p>If you need assistance, you can <a href="mailto:nodemailing05@gmail.com">send an email</a> to nodemailing05@gmail.com.</p>
+          <p>Regards,<br>Pearl Mody</p>
+        `,
+      };
+      await mailtransport.sendMail(details);
     return res.status(200).json({success:true, message: "Team created"});
     }catch(err){
         console.log(err);
@@ -38,7 +61,7 @@ router.post('/createTeam',[
 
 //update the teams means updating name of team /description 
 router.put('/updateTeam/:id',[body("name","Enter a valid name ").isLength({min:2}),
-    body("description","Enter a valid description").isLength({nim:4})
+    body("description","Enter a valid description").isLength({nim:4}) 
 ],async(req,res)=>{
     const errors = validationResult(req);
     if(!errors.isEmpty()) return res.status(400).json({success:false , message : "There is some problem"});
@@ -93,6 +116,36 @@ router.post('/joiningTeam',async(req,res)=>{
         return res.status(500).json({success:false , message : "There is some problem"});
     }
 })
+
+
+// Delete a team
+router.delete('/deleteTeam/:id', async (req, res) => {
+    const teamId = req.params.id;
+    const userId = req.user.id;
+
+    try {
+        const team = await Team.findById(teamId);
+
+        if (!team) {
+            return res.status(404).json({ success: false, message: "Team not found" });
+        }
+
+        // Check if the current user is the owner of the team
+        if (team.userId.toString() !== userId) {
+            return res.status(403).json({ success: false, message: "Only the owner can delete this team" });
+        }
+
+        // Delete the team
+        await Team.findByIdAndDelete(teamId);
+
+        return res.status(200).json({ success: true, message: "Team deleted successfully!" });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, message: "There is some problem" });
+    }
+});
+
 
 
 
