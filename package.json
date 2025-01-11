@@ -18,9 +18,12 @@
   },
   "homepage": "https://github.com/PearlMody05/Tasker#readme",
   "devDependencies": {
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "tailwindcss": "^3.4.17"
   },
   "dependencies": {
+    "@react-three/drei": "^9.120.6",
+    "@react-three/fiber": "^8.17.12",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -28,6 +31,7 @@
     "express-validator": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.1",
-    "nodemailer": "^6.9.15"
+    "nodemailer": "^6.9.15",
+    "three": "^0.172.0"
   }
 }
